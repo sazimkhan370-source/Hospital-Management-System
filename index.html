@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MediCore HMS - Modern Hospital Management & Clinical Operations Prototype">
+  <title>MediCore - Hospital Management System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome for medical & UI iconography -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-light">
+
+  <!-- ================= AUTHENTICATION MODAL / SCREEN ================= -->
+  <div id="authOverlay" class="auth-overlay active">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="brand-icon-wrapper">
+          <i class="fa-solid fa-hospital-user"></i>
+        </div>
+        <h1>MediCore <span>HMS</span></h1>
+        <p class="subtitle">Next-Gen Hospital Management & Clinical Workflow</p>
+      </div>
+
+      <!-- Quick Demo Account Chips -->
+      <div class="demo-accounts-pill">
+        <span class="pill-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Instant Demo Login:</span>
+        <div class="chip-group">
+          <button type="button" class="demo-chip" data-role="admin" title="Pre-fill Administrator credentials">
+            <i class="fa-solid fa-user-shield"></i> Admin
+          </button>
+          <button type="button" class="demo-chip" data-role="doctor" title="Pre-fill Doctor credentials">
+            <i class="fa-solid fa-user-doctor"></i> Doctor
+          </button>
+          <button type="button" class="demo-chip" data-role="patient" title="Pre-fill Patient credentials">
+            <i class="fa-solid fa-bed-pulse"></i> Patient
+          </button>
+        </div>
+      </div>
+
+      <form id="loginForm" class="auth-form" novalidate>
+        <div class="form-group">
+          <label for="usernameInput"><i class="fa-regular fa-user"></i> Username</label>
+          <input type="text" id="usernameInput" placeholder="e.g. admin or dr.smith" required autocomplete="username">
+          <span class="error-msg" id="usernameError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="passwordInput"><i class="fa-solid fa-lock"></i> Password</label>
+          <div class="input-with-action">
+            <input type="password" id="passwordInput" placeholder="••••••••" required autocomplete="current-password">
+            <button type="button" id="togglePasswordBtn" class="toggle-password" aria-label="Toggle password visibility">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+          <span class="error-msg" id="passwordError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="roleSelect"><i class="fa-solid fa-shield-halved"></i> Role Scope</label>
+          <select id="roleSelect" required>
+            <option value="admin">Administrator (Full Access)</option>
+            <option value="doctor">Medical Doctor / Specialist</option>
+            <option value="patient">Patient / Care Receiver</option>
+          </select>
+        </div>
+
+        <button type="submit" id="loginSubmitBtn" class="btn btn-primary btn-block">
+          <span>Sign In to Portal</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+
+        <div class="auth-footer-notes">
+          <p><i class="fa-solid fa-lock"></i> Secured with C++17 RESTful Backend & In-Memory Store</p>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MAIN APPLICATION LAYOUT ================= -->
+  <div id="appContainer" class="app-layout" style="display: none;">
+    
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="app-sidebar" id="appSidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <div class="brand-mini-icon">
+            <i class="fa-solid fa-hospital"></i>
+          </div>
+          <div class="brand-info">
+            <h2>MediCore</h2>
+            <span class="badge-system">v1.0 C++ API</span>
+          </div>
+        </div>
+        <button id="sidebarCloseBtn" class="sidebar-toggle-btn mobile-only" aria-label="Close sidebar">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Active User Profile Card in Sidebar -->
+      <div class="sidebar-user-card">
+        <div class="user-avatar" id="sidebarAvatar">AD</div>
+        <div class="user-meta">
+          <strong id="sidebarUserName">Administrator</strong>
+          <span class="user-role-badge badge-admin" id="sidebarUserRole">ADMIN</span>
+        </div>
+      </div>
+
+      <!-- Navigation Links (Dynamic per role) -->
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">CORE MODULES</div>
+        <ul class="nav-list" id="sidebarNavList">
+          <!-- Dynamically populated or toggled based on current role -->
+          <li class="nav-item">
+            <a href="#" class="nav-link active" data-view="dashboard">
+              <i class="fa-solid fa-chart-pie"></i>
+              <span>Dashboard Overview</span>
+            </a>
+          </li>
+          <li class="nav-item role-scoped" data-access="admin,doctor">
+            <a href="#" class="nav-link" data-view="patients">
+              <i class="fa-solid fa-hospital-user"></i>
+              <span>Patients Directory</span>
+            </a>
+          </li>
+          <li class="nav-item role-scoped" data-access="admin,doctor,patient">
+            <a href="#" class="nav-link" data-view="appointments">
+              <i class="fa-regular fa-calendar-check"></i>
+              <span>Appointments</span>
+            </a>
+          </li>
+          <li class="nav-item role-scoped" data-access="doctor">
+            <a href="#" class="nav-link" data-view="doctor-portal">
+              <i class="fa-solid fa-stethoscope"></i>
+              <span>Doctor Clinic Workspace</span>
+            </a>
+          </li>
+          <li class="nav-item role-scoped" data-access="patient">
+            <a href="#" class="nav-link" data-view="patient-portal">
+              <i class="fa-solid fa-notes-medical"></i>
+              <span>My Medical Records</span>
+            </a>
+          </li>
+        </ul>
+
+        <div class="nav-section-title">SYSTEM STATUS</div>
+        <div class="system-status-indicator">
+          <div class="status-pulse"></div>
+          <div class="status-text">
+            <span>C++ Backend Connected</span>
+            <small id="backendPing">Port 8080 • Active</small>
+          </div>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="logoutBtn" class="btn btn-outline-danger btn-block">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span>Logout Session</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT VIEWPORT -->
+    <div class="app-main-wrapper">
+      
+      <!-- TOP NAVIGATION BAR -->
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <button id="sidebarToggleBtn" class="icon-button" aria-label="Toggle navigation drawer">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="page-header-info">
+            <h1 id="pageTitle">Dashboard Overview</h1>
+            <nav class="breadcrumb-trail" aria-label="breadcrumb">
+              <span id="breadcrumbRoot">MediCore</span> / <span id="breadcrumbCurrent">Dashboard</span>
+            </nav>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Quick search bar -->
+          <div class="topbar-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="globalSearchInput" placeholder="Quick search patients, appointments...">
+          </div>
+
+          <!-- Quick Action Button (Dynamic depending on role) -->
+          <div id="topbarActionArea">
+            <button id="topbarQuickActionBtn" class="btn btn-primary">
+              <i class="fa-solid fa-plus"></i>
+              <span id="topbarActionLabel">Book Appointment</span>
+            </button>
+          </div>
+
+          <!-- Date / Time Pill -->
+          <div class="datetime-pill">
+            <i class="fa-regular fa-clock"></i>
+            <span id="currentClockDisplay">12:00 PM</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- VIEWPORT PANELS (Switch via data-view) -->
+      <main class="app-content-viewport" id="mainViewport">
+
+        <!-- ================= 1. DASHBOARD VIEW ================= -->
+        <section id="view-dashboard" class="view-panel active">
+          <!-- Top Stat Metrics Grid -->
+          <div class="metrics-grid">
+            <div class="metric-card metric-blue">
+              <div class="metric-icon">
+                <i class="fa-solid fa-user-group"></i>
+              </div>
+              <div class="metric-body">
+                <span class="metric-label">Total Patients</span>
+                <h3 class="metric-value" id="statTotalPatients">--</h3>
+                <span class="metric-meta text-success"><i class="fa-solid fa-arrow-up"></i> Active Registry</span>
+              </div>
+            </div>
+
+            <div class="metric-card metric-cyan">
+              <div class="metric-icon">
+                <i class="fa-solid fa-calendar-days"></i>
+              </div>
+              <div class="metric-body">
+                <span class="metric-label">Total Appointments</span>
+                <h3 class="metric-value" id="statTotalAppointments">--</h3>
+                <span class="metric-meta text-info"><i class="fa-solid fa-clock"></i> System Wide</span>
+              </div>
+            </div>
+
+            <div class="metric-card metric-emerald">
+              <div class="metric-icon">
+                <i class="fa-solid fa-circle-check"></i>
+              </div>
+              <div class="metric-body">
+                <span class="metric-label">Completed Consults</span>
+                <h3 class="metric-value" id="statCompletedAppointments">--</h3>
+                <span class="metric-meta text-success"><i class="fa-solid fa-file-prescription"></i> Prescribed</span>
+              </div>
+            </div>
+
+            <div class="metric-card metric-purple">
+              <div class="metric-icon">
+                <i class="fa-solid fa-user-doctor"></i>
+              </div>
+              <div class="metric-body">
+                <span class="metric-label">Active Doctors</span>
+                <h3 class="metric-value" id="statTotalDoctors">--</h3>
+                <span class="metric-meta text-primary"><i class="fa-solid fa-hospital"></i> Multi-Specialty</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Action Banner -->
+          <div class="dashboard-banner">
+            <div class="banner-content">
+              <h2>Welcome to MediCore Hospital Operations Portal</h2>
+              <p>Real-time coordination between triage, medical specialists, pharmacy, and patient scheduling powered by modern C++17 architecture.</p>
+              <div class="banner-actions">
+                <button class="btn btn-light" id="dashRegisterPatientBtn">
+                  <i class="fa-solid fa-user-plus"></i> Register Patient
+                </button>
+                <button class="btn btn-outline-light" id="dashBookApptBtn">
+                  <i class="fa-regular fa-calendar-plus"></i> Schedule Appointment
+                </button>
+              </div>
+            </div>
+            <div class="banner-graphic">
+              <i class="fa-solid fa-heart-pulse"></i>
+            </div>
+          </div>
+
+          <!-- Recent Appointments Table Preview -->
+          <div class="card mb-4">
+            <div class="card-header flex-between">
+              <div>
+                <h3 class="card-title">Recent Clinical Appointments</h3>
+                <p class="card-subtitle">Real-time sync with in-memory persistence layer</p>
+              </div>
+              <button class="btn btn-sm btn-outline" data-view-target="appointments">
+                <span>View Full Schedule</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="data-table" id="dashboardRecentTable">
+                  <thead>
+                    <tr>
+                      <th>Appt ID</th>
+                      <th>Patient</th>
+                      <th>Assigned Doctor</th>
+                      <th>Department</th>
+                      <th>Schedule</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboardRecentBody">
+                    <tr><td colspan="7" class="text-center p-4">Loading clinical appointments...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= 2. PATIENTS DIRECTORY VIEW ================= -->
+        <section id="view-patients" class="view-panel">
+          <div class="panel-header-bar flex-between">
+            <div>
+              <h2>Patient Directory & Clinical History</h2>
+              <p class="text-muted">Register, search, and inspect electronic medical records (EMR).</p>
+            </div>
+            <button id="openNewPatientModalBtn" class="btn btn-primary">
+              <i class="fa-solid fa-user-plus"></i>
+              <span>Register New Patient</span>
+            </button>
+          </div>
+
+          <!-- Filter Toolbar -->
+          <div class="filter-card card mb-3">
+            <div class="filter-bar">
+              <div class="search-input-group">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="patientFilterInput" placeholder="Filter by patient name, ID, or phone...">
+              </div>
+              <div class="filter-select-group">
+                <select id="bloodGroupFilter">
+                  <option value="">All Blood Groups</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Patients Table -->
+          <div class="card">
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="data-table" id="patientsTable">
+                  <thead>
+                    <tr>
+                      <th>Patient ID</th>
+                      <th>Full Name</th>
+                      <th>DOB / Age</th>
+                      <th>Gender</th>
+                      <th>Blood Group</th>
+                      <th>Contact</th>
+                      <th>Known Allergies</th>
+                      <th class="text-right">Clinical Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="patientsTableBody">
+                    <!-- Dynamic rendering -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= 3. APPOINTMENTS SCHEDULING VIEW ================= -->
+        <section id="view-appointments" class="view-panel">
+          <div class="panel-header-bar flex-between">
+            <div>
+              <h2>Outpatient Appointments & Scheduling</h2>
+              <p class="text-muted">Track upcoming consultations, assign specialists, and manage visit lifecycles.</p>
+            </div>
+            <button id="openNewAppointmentModalBtn" class="btn btn-primary">
+              <i class="fa-regular fa-calendar-plus"></i>
+              <span>Book Appointment</span>
+            </button>
+          </div>
+
+          <!-- Appointment Status Filter Tabs -->
+          <div class="tabs-container mb-3">
+            <button class="tab-btn active" data-status-filter="all">All Appointments (<span id="countAllAppts">0</span>)</button>
+            <button class="tab-btn" data-status-filter="Scheduled">Scheduled (<span id="countScheduledAppts">0</span>)</button>
+            <button class="tab-btn" data-status-filter="Completed">Completed (<span id="countCompletedAppts">0</span>)</button>
+            <button class="tab-btn" data-status-filter="Cancelled">Cancelled (<span id="countCancelledAppts">0</span>)</button>
+          </div>
+
+          <!-- Appointments Table -->
+          <div class="card">
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="data-table" id="appointmentsTable">
+                  <thead>
+                    <tr>
+                      <th>Appt ID</th>
+                      <th>Patient Name</th>
+                      <th>Doctor</th>
+                      <th>Specialty</th>
+                      <th>Date & Slot</th>
+                      <th>Chief Complaint / Reason</th>
+                      <th>Status</th>
+                      <th class="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="appointmentsTableBody">
+                    <!-- Dynamic rendering -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= 4. DOCTOR CLINIC WORKSPACE VIEW ================= -->
+        <section id="view-doctor-portal" class="view-panel">
+          <div class="doctor-portal-header card mb-4">
+            <div class="doctor-badge-info">
+              <div class="doc-avatar"><i class="fa-solid fa-user-doctor"></i></div>
+              <div>
+                <h2 id="doctorPortalName">Dr. Specialist</h2>
+                <p id="doctorPortalSpecialty" class="text-muted">Cardiology • License #LIC-CARDIO-991</p>
+              </div>
+            </div>
+            <div class="portal-quick-stats">
+              <div class="p-stat">
+                <span class="p-stat-num" id="docPendingCount">0</span>
+                <span class="p-stat-lbl">Pending Consults</span>
+              </div>
+              <div class="p-stat">
+                <span class="p-stat-num text-success" id="docCompletedCount">0</span>
+                <span class="p-stat-lbl">Completed Today</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header flex-between">
+              <div>
+                <h3 class="card-title">My Assigned Consultations Queue</h3>
+                <p class="card-subtitle">Examine patient chart, record vitals, and issue clinical prescriptions</p>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="data-table" id="doctorQueueTable">
+                  <thead>
+                    <tr>
+                      <th>Time Slot</th>
+                      <th>Patient Name</th>
+                      <th>Symptoms / Reason</th>
+                      <th>Status</th>
+                      <th class="text-right">Consultation Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="doctorQueueBody">
+                    <!-- Dynamic rendering -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= 5. PATIENT PORTAL (MY MEDICAL RECORDS) ================= -->
+        <section id="view-patient-portal" class="view-panel">
+          <div class="patient-profile-card card mb-4">
+            <div class="patient-card-header">
+              <div class="patient-avatar-large"><i class="fa-solid fa-hospital-user"></i></div>
+              <div class="patient-meta">
+                <h2 id="patientPortalName">John Doe</h2>
+                <div class="patient-tags">
+                  <span class="tag" id="patientPortalId">PID-1001</span>
+                  <span class="tag tag-blood" id="patientPortalBlood">O+</span>
+                  <span class="tag tag-gender" id="patientPortalGender">Male</span>
+                </div>
+              </div>
+              <button class="btn btn-primary" id="patientBookSelfBtn">
+                <i class="fa-regular fa-calendar-plus"></i> Book New Visit
+              </button>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-header">
+              <h3 class="card-title">My Clinical Visit History & Prescriptions</h3>
+              <p class="card-subtitle">Verified records issued by attending physicians</p>
+            </div>
+            <div class="card-body">
+              <div id="patientRecordsTimeline" class="records-timeline">
+                <!-- Dynamic timeline cards -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- 1. REGISTER NEW PATIENT MODAL -->
+  <div id="registerPatientModal" class="modal-backdrop">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <i class="fa-solid fa-user-plus modal-icon"></i>
+            <div>
+              <h3>Register New Patient</h3>
+              <p class="text-muted">Create a permanent Electronic Health Record (EHR)</p>
+            </div>
+          </div>
+          <button type="button" class="modal-close-btn" data-modal-close="registerPatientModal">&times;</button>
+        </div>
+
+        <form id="newPatientForm" novalidate>
+          <div class="modal-body">
+            <div class="form-row">
+              <div class="form-group col-8">
+                <label for="pFullName">Full Legal Name <span class="required">*</span></label>
+                <input type="text" id="pFullName" placeholder="e.g. Eleanor Vance" required>
+                <span class="error-msg"></span>
+              </div>
+              <div class="form-group col-4">
+                <label for="pBloodGroup">Blood Group <span class="required">*</span></label>
+                <select id="pBloodGroup" required>
+                  <option value="">Select...</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                </select>
+                <span class="error-msg"></span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-4">
+                <label for="pDob">Date of Birth <span class="required">*</span></label>
+                <input type="date" id="pDob" required>
+                <span class="error-msg"></span>
+              </div>
+              <div class="form-group col-4">
+                <label for="pGender">Gender <span class="required">*</span></label>
+                <select id="pGender" required>
+                  <option value="">Select...</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+                <span class="error-msg"></span>
+              </div>
+              <div class="form-group col-4">
+                <label for="pPhone">Contact Phone <span class="required">*</span></label>
+                <input type="tel" id="pPhone" placeholder="+1 (555) 000-0000" required>
+                <span class="error-msg"></span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-6">
+                <label for="pEmergency">Emergency Contact Name & Phone</label>
+                <input type="text" id="pEmergency" placeholder="e.g. Spouse: +1 (555) 999-8888">
+              </div>
+              <div class="form-group col-6">
+                <label for="pAllergies">Known Allergies (Penicillin, Latex, etc.)</label>
+                <input type="text" id="pAllergies" placeholder="e.g. Penicillin, Peanuts (or 'None')">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="pAddress">Residential Address</label>
+              <input type="text" id="pAddress" placeholder="124 Medical Plaza Blvd, Suite 400">
+            </div>
+
+            <div class="form-group">
+              <label for="pHistory">Initial Medical History & Notes</label>
+              <textarea id="pHistory" rows="2" placeholder="Chronic conditions (Hypertension, Diabetes), prior surgeries..."></textarea>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-modal-close="registerPatientModal">Cancel</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="fa-solid fa-check"></i> Save Patient Record
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. BOOK APPOINTMENT MODAL -->
+  <div id="bookAppointmentModal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <i class="fa-regular fa-calendar-plus modal-icon"></i>
+            <div>
+              <h3>Schedule Clinical Appointment</h3>
+              <p class="text-muted">Reserve a consultation slot with a specialist</p>
+            </div>
+          </div>
+          <button type="button" class="modal-close-btn" data-modal-close="bookAppointmentModal">&times;</button>
+        </div>
+
+        <form id="bookAppointmentForm" novalidate>
+          <div class="modal-body">
+            
+            <div class="form-group" id="patientSelectGroup">
+              <label for="apptPatientSelect">Patient <span class="required">*</span></label>
+              <select id="apptPatientSelect" required>
+                <option value="">-- Choose Patient --</option>
+              </select>
+              <span class="error-msg"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="apptDoctorSelect">Attending Physician / Doctor <span class="required">*</span></label>
+              <select id="apptDoctorSelect" required>
+                <option value="">-- Choose Doctor / Department --</option>
+              </select>
+              <span class="error-msg"></span>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-6">
+                <label for="apptDate">Appointment Date <span class="required">*</span></label>
+                <input type="date" id="apptDate" required>
+                <span class="error-msg"></span>
+              </div>
+              <div class="form-group col-6">
+                <label for="apptTimeSlot">Available Slot <span class="required">*</span></label>
+                <select id="apptTimeSlot" required>
+                  <option value="">-- Select Time --</option>
+                  <option value="09:00 AM">09:00 AM</option>
+                  <option value="10:00 AM">10:00 AM</option>
+                  <option value="11:30 AM">11:30 AM</option>
+                  <option value="02:00 PM">02:00 PM</option>
+                  <option value="03:30 PM">03:30 PM</option>
+                  <option value="04:45 PM">04:45 PM</option>
+                </select>
+                <span class="error-msg"></span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="apptReason">Chief Complaint / Reason for Visit <span class="required">*</span></label>
+              <textarea id="apptReason" rows="2" placeholder="Describe symptoms or purpose (e.g. Chest discomfort, annual routine checkup...)" required></textarea>
+              <span class="error-msg"></span>
+            </div>
+
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-modal-close="bookAppointmentModal">Cancel</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="fa-solid fa-calendar-check"></i> Confirm Booking
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. DOCTOR PRESCRIPTION & CLINICAL RECORD MODAL -->
+  <div id="prescriptionModal" class="modal-backdrop">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <i class="fa-solid fa-file-prescription modal-icon"></i>
+            <div>
+              <h3>Clinical Consultation & Prescription</h3>
+              <p class="text-muted">Issue diagnostic assessment, medications, and advice</p>
+            </div>
+          </div>
+          <button type="button" class="modal-close-btn" data-modal-close="prescriptionModal">&times;</button>
+        </div>
+
+        <form id="prescriptionForm" novalidate>
+          <input type="hidden" id="rxAppointmentId">
+          <input type="hidden" id="rxPatientId">
+          
+          <div class="modal-body">
+            <!-- Patient Mini Summary -->
+            <div class="consultation-summary-pill mb-3">
+              <div>
+                <strong>Patient:</strong> <span id="rxPatientName">--</span> (<span id="rxPatientIdDisplay">--</span>)
+              </div>
+              <div>
+                <strong>Chief Complaint:</strong> <span id="rxReasonDisplay" class="text-italic">--</span>
+              </div>
+            </div>
+
+            <!-- Vitals Capture -->
+            <div class="vitals-fieldset mb-3">
+              <label class="fieldset-title"><i class="fa-solid fa-heart-pulse"></i> Patient Vitals</label>
+              <div class="form-row">
+                <div class="form-group col-3">
+                  <label for="rxBp">BP (mmHg)</label>
+                  <input type="text" id="rxBp" placeholder="120/80">
+                </div>
+                <div class="form-group col-3">
+                  <label for="rxHr">Heart Rate (bpm)</label>
+                  <input type="number" id="rxHr" placeholder="72">
+                </div>
+                <div class="form-group col-3">
+                  <label for="rxTemp">Temp (°F)</label>
+                  <input type="text" id="rxTemp" placeholder="98.6">
+                </div>
+                <div class="form-group col-3">
+                  <label for="rxWeight">Weight (kg)</label>
+                  <input type="number" id="rxWeight" placeholder="70">
+                </div>
+              </div>
+            </div>
+
+            <!-- Diagnosis -->
+            <div class="form-group">
+              <label for="rxDiagnosis">Clinical Diagnosis <span class="required">*</span></label>
+              <input type="text" id="rxDiagnosis" placeholder="e.g. Acute Bronchitis / Stage 1 Essential Hypertension" required>
+              <span class="error-msg"></span>
+            </div>
+
+            <!-- Medication Items Dynamic List -->
+            <div class="form-group">
+              <div class="flex-between mb-2">
+                <label>Rx Prescriptions & Dosages</label>
+                <button type="button" id="addMedicationRowBtn" class="btn btn-sm btn-outline">
+                  <i class="fa-solid fa-plus"></i> Add Medicine
+                </button>
+              </div>
+              <div id="medicationItemsContainer" class="medication-container">
+                <!-- Dynamically added medication lines -->
+              </div>
+            </div>
+
+            <!-- Doctor Notes / Instructions -->
+            <div class="form-group">
+              <label for="rxAdvice">Physician Advice & Follow-up</label>
+              <textarea id="rxAdvice" rows="2" placeholder="e.g. Adequate hydration, low sodium diet. Follow up in 14 days."></textarea>
+            </div>
+
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-modal-close="prescriptionModal">Cancel</button>
+            <button type="submit" class="btn btn-success">
+              <i class="fa-solid fa-check-double"></i> Complete & Sign Prescription
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. PATIENT EMR DETAILS MODAL (VIEW HISTORY) -->
+  <div id="patientDetailsModal" class="modal-backdrop">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <i class="fa-solid fa-id-card-clip modal-icon"></i>
+            <div>
+              <h3 id="emrPatientName">Patient Medical History</h3>
+              <p id="emrPatientIdSub" class="text-muted">PID-1001</p>
+            </div>
+          </div>
+          <button type="button" class="modal-close-btn" data-modal-close="patientDetailsModal">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="patient-info-summary-grid mb-4">
+            <div class="info-item">
+              <span class="info-label">Date of Birth</span>
+              <strong id="emrDob">--</strong>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Blood Group</span>
+              <strong id="emrBlood">--</strong>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Phone</span>
+              <strong id="emrPhone">--</strong>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Emergency Contact</span>
+              <strong id="emrEmergency">--</strong>
+            </div>
+            <div class="info-item col-12">
+              <span class="info-label">Known Allergies</span>
+              <strong id="emrAllergies" class="text-danger">--</strong>
+            </div>
+            <div class="info-item col-12">
+              <span class="info-label">Chronic History</span>
+              <p id="emrHistoryText" class="text-muted">--</p>
+            </div>
+          </div>
+
+          <h4><i class="fa-solid fa-clock-rotate-left"></i> Consultation Records & Treatment Timeline</h4>
+          <div id="emrRecordsList" class="emr-timeline">
+            <!-- Render past prescriptions and visits -->
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-modal-close="patientDetailsModal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- FRONTEND LOGIC -->
+  <script src="app.js"></script>
+</body>
+</html>

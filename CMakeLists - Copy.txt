@@ -1,0 +1,27 @@
+cmake_minimum_required(VERSION 3.12)
+project(HospitalManagementSystem LANGUAGES CXX)
+
+# Enforce C++17 Standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Include directories
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+# Executable target
+add_executable(medicore_server server.cpp)
+
+# Platform-specific socket & thread libraries
+if(WIN32)
+    target_link_libraries(medicore_server PRIVATE ws2_32)
+else()
+    target_link_libraries(medicore_server PRIVATE pthread)
+endif()
+
+# Compiler warnings
+if(MSVC)
+    target_compile_options(medicore_server PRIVATE /W4 /EHsc)
+else()
+    target_compile_options(medicore_server PRIVATE -Wall -Wextra -pedantic)
+endif()
